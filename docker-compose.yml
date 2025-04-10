@@ -1,0 +1,8 @@
+services:
+  account:
+  catlog:
+  order:
+  graphql:
+  accountDB:
+  catlogDB:
+  orderDB:

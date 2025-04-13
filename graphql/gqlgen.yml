@@ -1,0 +1,9 @@
+# cmd/graphql/gqlgen.yml
+
+schema: schema.graphql
+# models:
+#   Account:
+#     model: github.com/theshubhamy/microGo/cmd/graphql.Account
+#     fields:
+#       orders:
+#         resolver: true

@@ -1,4 +1,0 @@
-package graphql
-
-// Accounts
-// Products

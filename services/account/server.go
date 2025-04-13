@@ -1,0 +1,72 @@
+package account
+
+//go:generate protoc ./account.proto --go_out=plugins=grpc:./pb
+
+import (
+	"context"
+	"fmt"
+	"net"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+)
+
+type grpcServer struct {
+	service Service
+}
+
+func ListenGrpcServer(s Service, port int) error {
+
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		return err
+	}
+
+	server := grpc.NewServer()
+	reflection.Register(server)
+	return server.Serve(lis)
+}
+
+func PostAccount(server *grpcServer, ctx context.Context, r *pb.PostAccountRequest) (*pb.PostAccountResponse, error) {
+	account, err := server.service.PostAccount(ctx, r.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.PostAccountResponse{
+		Account: &pb.Account{
+			Id:   account.Id,
+			Name: account.Name,
+		},
+	}, nil
+
+}
+func GetAccount(server *grpcServer, ctx context.Context, r *pb.GetAccountRequest) (*pb.GetAccountResponse, error) {
+	account, err := server.service.GetAccount(ctx, r.Id)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.GetAccountResponse{
+		Account: &pb.Account{
+			Id:   account.Id,
+			Name: account.Name,
+		},
+	}, nil
+}
+func GetAccounts(server *grpcServer, ctx context.Context, r *pb.GetAccountsRequest) (*pb.GetAccountsResponse, error) {
+	res, err := server.service.GetAccounts(ctx, r.Skip, r.Take)
+	if err != nil {
+		return nil, err
+	}
+	accounts := []*pb.Account{}
+	for _, account := range res {
+		accounts = append(accounts, &pb.Account{
+			Id:   account.Id,
+			Name: account.Name,
+		})
+	}
+	return &pb.GetAccountsResponse{
+		Accounts: accounts,
+	}, nil
+
+}

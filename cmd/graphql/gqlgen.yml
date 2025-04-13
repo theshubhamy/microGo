@@ -1,8 +1,0 @@
-schema:schema.graphql
-
-models:
-  Account:
-    model: github.com/theshubhamy/microGo/graphql.Account
-    fields:
-      orders:
-        resolver:true

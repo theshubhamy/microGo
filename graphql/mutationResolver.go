@@ -1,6 +1,6 @@
 package graphql
 
-type mutationResolver struct {
+type MutationResolver struct {
 	server *Server
 }
 

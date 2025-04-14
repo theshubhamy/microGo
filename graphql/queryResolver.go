@@ -2,15 +2,16 @@ package graphql
 
 import "context"
 
-type queryResolver struct {
+type QueryResolver struct {
 	server *Server
 }
 
 // Accounts
 // Products
 
-func (r *mutationResolver) GetAccounts(ctx context.Context, pagination *PaginationInput, id *string) ([]*Account, error) {
+func (r *QueryResolver) GetAccounts(ctx context.Context, pagination *PaginationInput, id *string) ([]*Account, error) {
+	return nil, nil
 }
-func (r *mutationResolver) GetProducts(ctx context.Context, pagination *PaginationInput, query *string, id *string) ([]*Product, error) {
-
+func (r *QueryResolver) GetProducts(ctx context.Context, pagination *PaginationInput, query *string, id *string) ([]*Product, error) {
+	return nil, nil
 }

@@ -1,6 +1,8 @@
-package main
+package graphql
 
 import (
+	"log"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/theshubhamy/microGo/services/account"
 	"github.com/theshubhamy/microGo/services/catalog"
@@ -15,6 +17,7 @@ type Server struct {
 
 func NewGraphQLServer(accountUrl, catalogURL, orderURL string) (*Server, error) {
 	// Connect to account service
+	log.Panicln("service urls", accountUrl, catalogURL, orderURL)
 	accountClient, err := account.NewClient(accountUrl)
 	if err != nil {
 		return nil, err

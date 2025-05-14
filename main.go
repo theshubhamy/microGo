@@ -8,6 +8,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/cors"
+	"github.com/theshubhamy/microGo/graphql"
 )
 
 type config struct {
@@ -23,7 +24,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	server, err := NewGraphQLServer(config.AccountURL, config.CatlogURL, config.OrderURL)
+	server, err := graphql.NewGraphQLServer(config.AccountURL, config.CatlogURL, config.OrderURL)
 	if err != nil {
 		log.Fatal(err)
 	}

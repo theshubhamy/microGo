@@ -20,7 +20,6 @@ func NewClient(url string) (*Client, error) {
 	}
 	c := pb.NewAccountServiceClient(conn)
 	return &Client{conn, c}, nil
-
 }
 
 func (c *Client) Close() {
@@ -37,6 +36,7 @@ func (c *Client) PostAccount(ctx context.Context, name string) (*Account, error)
 		Name: r.Account.Name,
 	}, nil
 }
+
 func (c *Client) GetAccount(ctx context.Context, id string) (*Account, error) {
 	r, err := c.service.GetAccount(ctx, &pb.GetAccountRequest{Id: id})
 	if err != nil {
@@ -47,6 +47,7 @@ func (c *Client) GetAccount(ctx context.Context, id string) (*Account, error) {
 		Name: r.Account.Name,
 	}, nil
 }
+
 func (c *Client) GetAccounts(ctx context.Context, skip uint64, take uint64) (*[]Account, error) {
 	res, err := c.service.GetAccounts(ctx, &pb.GetAccountsRequest{Skip: skip, Take: take})
 	if err != nil {
@@ -58,7 +59,6 @@ func (c *Client) GetAccounts(ctx context.Context, skip uint64, take uint64) (*[]
 			ID:   acc.Id,
 			Name: acc.Name,
 		})
-
 	}
 	return &accounts, nil
 }

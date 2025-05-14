@@ -15,7 +15,7 @@ type Config struct {
 
 func main() {
 	var config Config
-	log.Fatal("databaseURL", config.DATABASE_URL)
+
 	err := envconfig.Process("", &config)
 	if err != nil {
 		log.Fatal(err)

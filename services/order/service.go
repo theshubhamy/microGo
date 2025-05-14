@@ -1,60 +1,60 @@
-package account
+package order
 
 import (
 	"context"
+	"time"
 
 	"github.com/segmentio/ksuid"
 )
 
 type Service interface {
-	PostAccount(ctx context.Context, name string) (*Account, error)
-	GetAccount(ctx context.Context, id string) (*Account, error)
-	GetAccounts(ctx context.Context, skip uint64, take uint64) ([]Account, error)
+	PostOrder(ctx context.Context, accountId string, products []OrderedProduct) (*Order, error)
+	GetOrdersForAccount(ctx context.Context, accountId string) ([]Order, error)
+}
+type Order struct {
+	ID         string
+	CreatedAt  time.Time
+	TotalPrice float64
+	AccountId  string
+	Products   []OrderedProduct
 }
 
-type Account struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+type OrderedProduct struct {
+	ID          string
+	Name        string
+	Description string
+	Price       float64
+	Quantity    uint32
 }
 
-type accountService struct {
+type orderService struct {
 	repository Repository
 }
 
 func NewService(r Repository) Service {
-	return &accountService{r}
+	return &orderService{r}
 }
 
-func (as *accountService) PostAccount(ctx context.Context, name string) (*Account, error) {
-	account := &Account{
-		Name: name,
-		ID:   ksuid.New().String(),
+func (os orderService) PostOrder(ctx context.Context, accountId string, products []OrderedProduct) (*Order, error) {
+	order := &Order{
+		ID:        ksuid.New().String(),
+		CreatedAt: time.Now().UTC(),
+		AccountId: accountId,
+		Products:  products,
 	}
 
-	err := as.repository.PutAccount(ctx, *account)
+	order.TotalPrice = 0.0
+
+	for _, p := range products {
+		order.TotalPrice += p.Price * float64(p.Quantity)
+	}
+	err := os.repository.PutOrder(ctx, *order)
 	if err != nil {
 		return nil, err
 	}
-	return account, nil
-
+	return order, nil
 }
 
-func (as *accountService) GetAccount(ctx context.Context, id string) (*Account, error) {
-	account, err := as.repository.GetAccountbyId(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	return account, nil
-}
-
-func (as *accountService) GetAccounts(ctx context.Context, skip uint64, take uint64) ([]Account, error) {
-	if take > 100 || (skip == 0 && take == 0) {
-		take = 100
-	}
-	accounts, err := as.repository.ListAccounts(ctx, skip, take)
-	if err != nil {
-		return nil, err
-	}
-	return accounts, nil
+func (os orderService) GetOrdersForAccount(ctx context.Context, accountId string) ([]Order, error) {
+	return os.repository.GetOrderforAccount(ctx, accountId)
 }

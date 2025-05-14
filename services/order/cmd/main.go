@@ -5,25 +5,26 @@ import (
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
-	"github.com/theshubhamy/microGo/services/account"
+	"github.com/theshubhamy/microGo/services/order"
 	"github.com/tinrab/retry"
 )
 
 type Config struct {
-	DATABASE_URL string `envconfig:"DATABASE_URL"`
+	DatabaseURL string `envconfig:"DATABASE_URL"`
+	AccountURL  string `envconfig:"ACCOUNT_SERVICE_URL"`
+	CatalogURL  string `envconfig:"CATALOG_SERVICE_URL"`
 }
 
 func main() {
-
 	var config Config
-	log.Fatal("databaseURL", config.DATABASE_URL)
 	err := envconfig.Process("", &config)
 	if err != nil {
 		log.Fatal(err)
 	}
-	var r account.Repository
+	var r order.Repository
+
 	retry.ForeverSleep(2*time.Second, func(_ int) (err error) {
-		r, err = account.NewPostgresRepository(config.DATABASE_URL)
+		r, err = order.NewPostgresRepository(config.DatabaseURL)
 		if err != nil {
 			log.Println(err)
 		}
@@ -31,6 +32,6 @@ func main() {
 	})
 	defer r.Close()
 	log.Println("Server running at 8080 ...")
-	s := account.NewService(r)
-	log.Fatal(account.ListenGrpcServer(s, 8080))
+	s := order.NewService(r)
+	log.Fatal(order.ListenGrpcServer(s, config.AccountURL, config.CatalogURL, 8080))
 }

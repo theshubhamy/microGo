@@ -1,38 +1,43 @@
-package graphql
+package main
 
 import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/theshubhamy/microGo/services/account"
+	"github.com/theshubhamy/microGo/services/catalog"
+	"github.com/theshubhamy/microGo/services/order"
 )
 
 type Server struct {
 	accountClient *account.Client
-	catlogClient  *catlog.Client
+	catalogClient *catalog.Client
 	orderClient   *order.Client
 }
 
-func NewGraphqlServer(accountURL, catalogURL, orderURL string) (*Server, error) {
-	accountClient, err := account.NewClient(accountURL)
+func NewGraphQLServer(accountUrl, catalogURL, orderURL string) (*Server, error) {
+	// Connect to account service
+	accountClient, err := account.NewClient(accountUrl)
+	if err != nil {
+		return nil, err
+	}
 
+	// Connect to product service
+	catalogClient, err := catalog.NewClient(catalogURL)
 	if err != nil {
 		accountClient.Close()
 		return nil, err
 	}
-	catlogClient, err := catalog.NewClient(catalogURL)
-	if err != nil {
-		catlogClient.Close()
-		return nil, err
-	}
-	orderClient, err := order.NewClient(orderURL)
 
+	// Connect to order service
+	orderClient, err := order.NewClient(orderURL)
 	if err != nil {
-		orderClient.Close()
+		accountClient.Close()
+		catalogClient.Close()
 		return nil, err
 	}
 
 	return &Server{
 		accountClient,
-		catlogClient,
+		catalogClient,
 		orderClient,
 	}, nil
 }
@@ -56,5 +61,7 @@ func (s *Server) Account() AccountResolver {
 }
 
 func (s *Server) ToExecutableSchema() graphql.ExecutableSchema {
-	return NewExecutableSchema(Config{Resolvers: s})
+	return NewExecutableSchema(Config{
+		Resolvers: s,
+	})
 }

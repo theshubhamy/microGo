@@ -14,13 +14,13 @@ type Config struct {
 }
 
 func main() {
-
 	var config Config
-	log.Fatal("databaseURL", config.DATABASE_URL)
 	err := envconfig.Process("", &config)
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Fatal("account databaseURL", config.DATABASE_URL)
+
 	var r account.Repository
 	retry.ForeverSleep(2*time.Second, func(_ int) (err error) {
 		r, err = account.NewPostgresRepository(config.DATABASE_URL)

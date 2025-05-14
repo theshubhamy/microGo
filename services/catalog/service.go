@@ -7,7 +7,7 @@ import (
 )
 
 type Service interface {
-	PostProduct(ctx context.Context, name string, description string, price string) (*Product, error)
+	PostProduct(ctx context.Context, name string, description string, price float64) (*Product, error)
 	GetProduct(ctx context.Context, id string) (*Product, error)
 	GetProducts(ctx context.Context, skip uint64, take uint64) ([]Product, error)
 	GetProductsbyIds(ctx context.Context, ids []string) ([]Product, error)
@@ -15,10 +15,10 @@ type Service interface {
 }
 
 type Product struct {
-	ID          string `json:"Id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Price       string `json:"price"`
+	ID          string  `json:"Id"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Price       float64 `json:"price"`
 }
 
 type catalogService struct {
@@ -29,7 +29,7 @@ func NewService(r Repository) Service {
 	return &catalogService{r}
 }
 
-func (cs *catalogService) PostProduct(ctx context.Context, name string, description string, price string) (*Product, error) {
+func (cs *catalogService) PostProduct(ctx context.Context, name string, description string, price float64) (*Product, error) {
 	product := &Product{
 		ID:          ksuid.New().String(),
 		Name:        name,

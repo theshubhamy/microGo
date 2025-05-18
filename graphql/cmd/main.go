@@ -13,7 +13,7 @@ import (
 
 type config struct {
 	AccountURL string `envconfig:"ACCOUNT_SERVICE_URL"`
-	CatlogURL  string `envconfig:"CATLOG_SERVICE_URL"`
+	CatalogURL string `envconfig:"CATALOG_SERVICE_URL"`
 	OrderURL   string `envconfig:"ORDER_SERVICE_URL"`
 }
 
@@ -24,12 +24,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	server, err := graphql.NewGraphQLServer(config.AccountURL, config.CatlogURL, config.OrderURL)
+	server, err := graphql.NewGraphQLServer(config.AccountURL, config.CatalogURL, config.OrderURL)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("GraphQLServer Error", err)
 	}
 	http.Handle("/graphql", handler.New(server.ToExecutableSchema()))
-	http.Handle("/playground", playground.Handler("GraphQL playground", "/graphql"))
+	http.Handle("/", playground.Handler("GraphQL playground", "/graphql"))
 
 	// Add CORS middleware to allow cross-origin requests
 	corsHandler := cors.New(cors.Options{

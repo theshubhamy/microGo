@@ -16,7 +16,7 @@ COPY vendor vendor
 COPY services services
 COPY graphql graphql
 # Build the account service application
-RUN GO111MODULE=on go build -mod vendor -o /go/bin/app ./graphql
+RUN GO111MODULE=on go build -mod vendor -o /go/bin/app ./graphql/cmd
 
 # Final stage: use a minimal Alpine image
 FROM alpine:3.11

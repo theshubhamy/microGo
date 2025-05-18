@@ -26,8 +26,10 @@ func main() {
 	retry.ForeverSleep(2*time.Second, func(_ int) (err error) {
 		r, err = catalog.NewElasticRepository(config.DATABASE_URL)
 		if err != nil {
+			log.Println("Elastic Search db error")
 			log.Println(err)
 		}
+		log.Println("Elastic Search db conected")
 		return
 	})
 	defer r.Close()

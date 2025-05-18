@@ -17,9 +17,9 @@ type Server struct {
 
 func NewGraphQLServer(accountUrl, catalogURL, orderURL string) (*Server, error) {
 	// Connect to account service
-	log.Panicln("service urls", accountUrl, catalogURL, orderURL)
 	accountClient, err := account.NewClient(accountUrl)
 	if err != nil {
+		log.Println("accountClienterror", err)
 		return nil, err
 	}
 

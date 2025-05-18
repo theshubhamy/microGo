@@ -30,7 +30,7 @@ func ListenGrpcServer(s Service, port int) error {
 	return server.Serve(lis)
 }
 
-func PostProduct(server *grpcServer, ctx context.Context, r *pb.PostProductRequest) (*pb.PostProductResponse, error) {
+func (server *grpcServer) PostProduct(ctx context.Context, r *pb.PostProductRequest) (*pb.PostProductResponse, error) {
 	p, err := server.service.PostProduct(ctx, r.Name, r.Description, r.Price)
 	if err != nil {
 		log.Println(err)
@@ -47,7 +47,7 @@ func PostProduct(server *grpcServer, ctx context.Context, r *pb.PostProductReque
 	}, nil
 }
 
-func GetProduct(server *grpcServer, ctx context.Context, r *pb.GetProductRequest) (*pb.GetProductResponse, error) {
+func (server *grpcServer) GetProduct(ctx context.Context, r *pb.GetProductRequest) (*pb.GetProductResponse, error) {
 	p, err := server.service.GetProduct(ctx, r.Id)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func GetProduct(server *grpcServer, ctx context.Context, r *pb.GetProductRequest
 	}, nil
 }
 
-func GetProducts(server *grpcServer, ctx context.Context, r *pb.GetProductsRequest) (*pb.GetProductsResponse, error) {
+func (server *grpcServer) GetProducts(ctx context.Context, r *pb.GetProductsRequest) (*pb.GetProductsResponse, error) {
 	var res []Product
 	var err error
 

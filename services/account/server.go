@@ -30,28 +30,34 @@ func ListenGrpcServer(s Service, port int) error {
 }
 
 func (server *grpcServer) PostAccount(ctx context.Context, r *pb.PostAccountRequest) (*pb.PostAccountResponse, error) {
-	account, err := server.service.PostAccount(ctx, r.Name)
+	account, err := server.service.PostAccount(ctx, r.Name, r.Email, r.Phone, r.Password)
 	if err != nil {
 		return nil, err
 	}
 
 	return &pb.PostAccountResponse{
 		Account: &pb.Account{
-			Id:   account.ID,
-			Name: account.Name,
+			Id:    account.ID,
+			Name:  account.Name,
+			Email: account.Email,
+			Phone: account.Phone,
 		},
 	}, nil
 }
 
-func (server *grpcServer) GetAccount(ctx context.Context, r *pb.GetAccountRequest) (*pb.GetAccountResponse, error) {
-	account, err := server.service.GetAccount(ctx, r.Id)
+func (server *grpcServer) LoginAccount(ctx context.Context, r *pb.LoginRequest) (*pb.LoginResponse, error) {
+	account, accessToken, refreshToken, err := server.service.LoginAccount(ctx, r.Emailorphone, r.Password, r.Ip, r.UserAgent)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.GetAccountResponse{
+	return &pb.LoginResponse{
 		Account: &pb.Account{
-			Id:   account.ID,
-			Name: account.Name,
+			Id:           account.ID,
+			Name:         account.Name,
+			Email:        account.Email,
+			Phone:        account.Phone,
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
 		},
 	}, nil
 }
@@ -64,8 +70,10 @@ func (server *grpcServer) GetAccounts(ctx context.Context, r *pb.GetAccountsRequ
 	accounts := []*pb.Account{}
 	for _, account := range res {
 		accounts = append(accounts, &pb.Account{
-			Id:   account.ID,
-			Name: account.Name,
+			Id:    account.ID,
+			Name:  account.Name,
+			Email: account.Email,
+			Phone: account.Phone,
 		})
 	}
 	return &pb.GetAccountsResponse{

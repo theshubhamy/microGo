@@ -4,32 +4,29 @@ import (
 	"log"
 	"time"
 
-	"github.com/kelseyhightower/envconfig"
 	"github.com/theshubhamy/microGo/services/account"
 	"github.com/tinrab/retry"
 )
 
-type Config struct {
-	DATABASE_URL string `envconfig:"DATABASE_URL"`
-}
-
 func main() {
-	var config Config
-	err := envconfig.Process("", &config)
-	if err != nil {
-		log.Fatal(err)
-	}
+	account.LoadConfig()
+	redisClient := account.InitRedis(account.AppConfig.REDIS_URL)
+	defer func() {
+		if err := redisClient.Close(); err != nil {
+			log.Printf("Error closing Redis client: %v", err)
+		}
+	}()
 
-	var r account.Repository
+	var accRepo account.Repository
 	retry.ForeverSleep(2*time.Second, func(_ int) (err error) {
-		r, err = account.NewPostgresRepository(config.DATABASE_URL)
+		accRepo, err = account.NewPostgresRepository(account.AppConfig.DATABASE_URL)
 		if err != nil {
 			log.Println(err)
 		}
 		return
 	})
-	defer r.Close()
+	defer accRepo.Close()
 	log.Println("Server running at 8080 ...")
-	s := account.NewService(r)
+	s := account.NewService(accRepo, redisClient)
 	log.Fatal(account.ListenGrpcServer(s, 8080))
 }

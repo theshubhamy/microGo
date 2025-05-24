@@ -1,166 +1,269 @@
-# microGo
+# Quick Commerce Backend
 
-## Project Structure
+## Project Architecture (Go + gRPC + GraphQL)
 
-The project consists of the following main components:
+This document outlines a production-grade microservices architecture for a **Quick Commerce Platform** like Blinkit, built using **Go (Golang)** with **gRPC for internal communication** and **GraphQL as the API gateway**. It includes:
 
-- Account Service
-- Catalog Service
-- Order Service
-- GraphQL API Gateway
+- Microservices breakdown
+- Required tools/libraries per service
+- Folder structure with package descriptions
+- Scalability & DevOps practices
 
-Each service has its own database:
+---
 
-- Account and Order services use PostgreSQL
-- Catalog service uses Elasticsearch
+## 📂 Microservices & Their Responsibilities
 
-## Getting Started
+### 1. `account`
 
-1. Clone the repository:
+**Responsibilities:**
 
-   ```
-   git clone <repository-url>
-   cd <project-directory>
-   ```
+- User signup/login (OTP/email)
+- JWT-based authentication
+- Wallet and address management
 
-2. Start the services using Docker Compose:
+**Tools & Packages:**
 
-   ```
-   docker-compose up -d --build
-   ```
+- `bcrypt` for password hashing
+- `jwt-go` for JWT tokens
+- `gRPC` for internal calls
+- `PostgreSQL` via `pgx`
+- `Redis` for session cache
 
-3. Access the GraphQL playground at `http://localhost:8000/playground`
+---
 
-Steps for grpc file generation -
+### 2. `catalog`
 
-1. wget https://github.com/protocolbuffers/protobuf/releases/download/v23.0/protoc-23.0-linux-x86_64.zip
-2. unzip protoc-23.0-linux-x86_64.zip -d protoc
-3. sudo mv protoc/bin/protoc /usr/local/bin/
-4. go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-5. go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-6. echo $PATH
-7. export PATH="$PATH:$(go env GOPATH)/bin"
-8. source ~/.bashrc
-9. create the pb folder in your project
-10. add this to account.proto - option go_package = "./pb";
-11. finally run this command - protoc --go_out=./pb --go-grpc_out=./pb account.proto
+**Responsibilities:**
 
-## GraphQL API Usage
+- Products, categories, and inventory management
+- Price and stock updates
 
-The GraphQL API provides a unified interface to interact with all the microservices.
+**Tools & Packages:**
 
-### Query Accounts
+- `gorm` or `pgx` for DB layer
+- `gRPC`
+- `Kafka` for stock sync with inventory service
+- `ElasticSearch` (optional) for search indexing
 
-```graphql
-query {
-  accounts {
-    id
-    name
-  }
-}
+---
+
+### 3. `order`
+
+**Responsibilities:**
+
+- Cart and order placement
+- Dynamic coupon and pricing engine
+- Order state management
+
+**Tools & Packages:**
+
+- `gRPC`
+- `Redis` (for cart state)
+- `PostgreSQL`
+- `Kafka` for event dispatch (order_created, order_paid)
+
+---
+
+### 4. `payment`
+
+**Responsibilities:**
+
+- Integrate Razorpay/Stripe
+- Payment initiation, webhook validation
+- Transaction logging
+
+**Tools & Packages:**
+
+- `Go HTTP client`
+- `Kafka` (for payment success/failure events)
+- `PostgreSQL`
+- `gRPC`
+
+---
+
+### 5. `notification`
+
+**Responsibilities:**
+
+- Handle email, SMS, and push notifications
+- Send OTPs, order updates, promotions
+
+**Tools & Packages:**
+
+- `Kafka` (consume events)
+- `SendGrid`, `Twilio`, or Firebase Cloud Messaging
+- `cron` or scheduler for retries
+
+---
+
+### 6. `search`
+
+**Responsibilities:**
+
+- Full-text search for products, categories
+- Filtering and sorting support
+
+**Tools & Packages:**
+
+- `ElasticSearch` or `Meilisearch`
+- `gRPC`
+- `Redis` for caching
+
+---
+
+## 🗒️ Folder Structure with Tools and Utilities
+
 ```
 
-### Create an Account
+.
+├── graphql/ # GraphQL Gateway
+│ ├── main.go
+│ ├── schema.graphql # GraphQL Schema
+│ ├── gqlgen.yml
+│ └── resolvers/ # Query/Mutation Resolvers
+│
+├── services/ # Microservices
+│ ├── account/
+│ ├── catalog/
+│ ├── order/
+│ ├── payment/
+│ ├── notification/
+│ └── search/
+│
+├── proto/ # Protobuf files
+├── kafka/ # Kafka topic setup & producers/consumers
+├── monitoring/ # Prometheus + Grafana setup
+├── docker-compose.yml
+├── Makefile
+├── README.md
 
-```graphql
-mutation {
-  createAccount(account: { name: "New Account" }) {
-    id
-    name
-  }
-}
 ```
 
-### Query Products
+## Service Architecture
 
-```graphql
-query {
-  products {
-    id
-    name
-    price
-  }
-}
+```
+main.go
+  └── Loads config, connects DB, starts gRPC server
+
+server.go (transport layer)
+  └── Implements gRPC interface
+      └── Calls service.go (business logic)
+              └── Calls repository.go (DB logic)
+
+client.go
+  └── Allows other services to call this via gRPC
+
+pb/
+  └── Auto-generated from account.proto
+
+Dockerfiles
+  └── Build containers for app and DB
+
+db.sql
+  └── Bootstraps schema (users, sessions, etc.)
+
 ```
 
-### Create a Product
+### `graphql/`
 
-```graphql
-mutation {
-  createProduct(
-    product: { name: "New Product", description: "A new product", price: 19.99 }
-  ) {
-    id
-    name
-    price
-  }
-}
-```
+**Uses:**
 
-### Create an Order
+- `gqlgen` for GraphQL server
+- Converts schema to Go types and resolvers
+- Acts as public API Gateway
 
-```graphql
-mutation {
-  createOrder(
-    order: {
-      accountId: "account_id"
-      products: [{ id: "product_id", quantity: 2 }]
-    }
-  ) {
-    id
-    totalPrice
-    products {
-      name
-      quantity
-    }
-  }
-}
-```
+### `services/*`
 
-### Query Account with Orders
+Each service is a Go module with its own:
 
-```graphql
-query {
-  accounts(id: "account_id") {
-    name
-    orders {
-      id
-      createdAt
-      totalPrice
-      products {
-        name
-        quantity
-        price
-      }
-    }
-  }
-}
-```
+- `main.go`: Entry point
+- `server.go`: gRPC server
+- `handlers/`, `models/`, `clients/`
+- Dockerfile for containerization
 
-## Advanced Queries
+### `proto/`
 
-### Pagination and Filtering
+**Uses:**
 
-```graphql
-query {
-  products(pagination: { skip: 0, take: 5 }, query: "search_term") {
-    id
-    name
-    description
-    price
-  }
-}
-```
+- Shared `.proto` files
+- Compiled with `protoc-gen-go` and `protoc-gen-go-grpc`
 
-### Calculate Total Spent by an Account
+### `docker-compose.yml`
 
-```graphql
-query {
-  accounts(id: "account_id") {
-    name
-    orders {
-      totalPrice
-    }
-  }
-}
-```
+**Uses:**
+
+- Service orchestration
+- Runs DBs (Postgres, Redis), Kafka, Prometheus
+
+### `Makefile`
+
+**Uses:**
+
+- Build, lint, run proto commands
+- Common local dev tasks
+
+---
+
+## ⚙️ DevOps + Production Setup
+
+### 📬 Kafka Message Queue for Asynchronous Workflows
+
+- **Kafka** for async events
+
+- Topics:
+  - `order.created`
+  - `order.paid`
+  - `inventory.updated`
+  - `wallet.topup`
+  - `notification.send`
+- Consumers in `order`, `catalog`, `payment`, and a new `notification` service
+- Ensures reliable background processing, decouples services
+
+### 3. 📊 Monitoring with Prometheus + Grafana
+
+- Prometheus scrapes metrics from services (`/metrics` endpoint using `promhttp`)
+- Grafana dashboards:
+  - Request latency & throughput per service
+  - DB query performance
+  - Kafka lag metrics
+
+### Observability
+
+- **Prometheus** + **Grafana** for metrics
+- **Sentry** for error tracking
+- **Jaeger** for distributed tracing
+
+### Security
+
+- HTTPS with TLS (via NGINX ingress)
+- JWT for auth
+- API rate limiting via Envoy or Istio
+
+### Scalability
+
+- **Kubernetes** deployment with:
+
+  - **HPA (Horizontal Pod Autoscaler)**
+  - Auto-scaling based on CPU/RAM
+  - Liveness/readiness probes
+
+### Alerts
+
+- Grafana alerts for latency, DB errors, traffic spikes
+- PagerDuty/Slack integration
+
+---
+
+## 🌟 Optional Features
+
+- **Machine Learning service** for product recommendations
+- **Admin portal** (React) to manage products, orders, coupons
+- **A/B testing framework** for experiments
+
+---
+
+## 📌 Future Enhancements
+
+- Replace Kafka with NATS JetStream or Redis Streams (lighter options)
+- Use gRPC Gateway for REST fallback
+- Add CI/CD pipeline using GitHub Actions or GitLab CI

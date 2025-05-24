@@ -6,14 +6,39 @@ option go_package = "./pb";
 message Account {
     string id = 1;
     string name = 2;
+    string email = 3;
+    string phone = 4;
+    string password = 5;
+}
+
+message LoginResponse {
+  string id = 1;
+  string email = 2;
+  string phone = 3;
+  string name = 4;
+  string access_token = 5;
+  string refresh_token = 6;
+}
+
+message LoginRequest {
+  string emailorphone = 1;
+  string password = 2;
+  string ip = 3;
+  string user_agent = 4;
 }
 
 message PostAccountRequest {
     string name = 1;
+    string email = 2;
+    string phone = 3;
+    string password = 4;
 }
 
 message PostAccountResponse {
-    Account account = 1;
+    string id = 1;
+    string name = 2;
+    string email = 3;
+    string phone = 4;
 }
 
 message GetAccountRequest {
@@ -21,7 +46,10 @@ message GetAccountRequest {
 }
 
 message GetAccountResponse {
-    Account account = 1;
+    string id = 1;
+    string name = 2;
+    string email = 3;
+    string phone = 4;
 }
 
 message GetAccountsRequest {
@@ -39,5 +67,7 @@ service AccountService {
     rpc GetAccount (GetAccountRequest) returns (GetAccountResponse) {
     }
     rpc GetAccounts (GetAccountsRequest) returns (GetAccountsResponse) {
+    }
+    rpc LoginAccount(LoginRequest) returns (LoginResponse){
     }
 }

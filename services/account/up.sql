@@ -1,4 +1,11 @@
 CREATE TABLE IF NOT EXISTS accounts (
   id CHAR(27) PRIMARY KEY,
-  name VARCHAR(24) NOT NULL
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  phone VARCHAR(255) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
+
+CREATE INDEX IF NOT EXISTS idx_accounts_name ON accounts (name);

@@ -71,7 +71,7 @@ func (as *accountService) LoginAccount(ctx context.Context, emailOrPhone, passwo
 		return nil, "", "", err
 	}
 	if !CompareHashPassword(account.Password, password) {
-		return nil, "", "", errors.New("Invalid Credentials")
+		return nil, "", "", errors.New("invalid Credentials")
 	}
 
 	accessToken, refreshToken, err := GenerateJWT(account.ID)

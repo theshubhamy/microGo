@@ -6,11 +6,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = []byte("your-secret-key")
-
-// Claims struct (can include custom fields)
 type CustomClaims struct {
-	UserID string `json:"user_id"`
+	UserID string `json:"userID"`
 	jwt.RegisteredClaims
 }
 
@@ -27,11 +24,11 @@ func GenerateJWT(userID string) (string, string, error) {
 	jwtSecret := AppConfig.JWT_SECRET
 	refreshjwtSecret := AppConfig.REFRESH_JWT_SECRET
 	// Sign the token with the secret
-	accessToken, err := token.SignedString(jwtSecret)
+	accessToken, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {
 		return "", "", err
 	}
-	refreshToken, err := token.SignedString(refreshjwtSecret)
+	refreshToken, err := token.SignedString([]byte(refreshjwtSecret))
 	if err != nil {
 		return "", "", err
 	}
@@ -39,7 +36,8 @@ func GenerateJWT(userID string) (string, string, error) {
 }
 
 func VerifyJWT(tokenString string) (*CustomClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+	jwtSecret := AppConfig.JWT_SECRET
+	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (any, error) {
 		return jwtSecret, nil
 	})
 

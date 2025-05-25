@@ -27,7 +27,7 @@ func (c *Client) Close() {
 }
 
 func (c *Client) PostAccount(ctx context.Context, name, email, phone, password string) (*Account, error) {
-	r, err := c.service.PostAccount(ctx, &pb.PostAccountRequest{Name: name})
+	r, err := c.service.PostAccount(ctx, &pb.PostAccountRequest{Name: name, Email: email, Phone: phone, Password: password})
 	if err != nil {
 		return nil, err
 	}
@@ -39,14 +39,31 @@ func (c *Client) PostAccount(ctx context.Context, name, email, phone, password s
 	}, nil
 }
 
+func (c *Client) LoginAccount(ctx context.Context, emailorphone, password, ip, userAgent string) (*Account, string, string, error) {
+	res, err := c.service.LoginAccount(ctx, &pb.LoginRequest{Emailorphone: emailorphone, Password: password, Ip: ip, UserAgent: userAgent})
+	if err != nil {
+		return nil, "", "", err
+	}
+	account := &Account{
+		ID:    res.Id,
+		Name:  res.Name,
+		Email: res.Email,
+		Phone: res.Phone,
+	}
+
+	return account, res.AccessToken, res.RefreshToken, nil
+}
+
 func (c *Client) GetAccount(ctx context.Context, id string) (*Account, error) {
 	r, err := c.service.GetAccount(ctx, &pb.GetAccountRequest{Id: id})
 	if err != nil {
 		return nil, err
 	}
 	return &Account{
-		ID:   r.Id,
-		Name: r.Name,
+		ID:    r.Id,
+		Name:  r.Name,
+		Email: r.Email,
+		Phone: r.Phone,
 	}, nil
 }
 

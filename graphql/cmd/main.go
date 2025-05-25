@@ -38,7 +38,7 @@ func main() {
 	srv.AddTransport(transport.GET{})
 	srv.AddTransport(transport.POST{})
 
-	http.Handle("/graphql", srv)
+	http.Handle("/graphql", graphql.InjectRequestMeta(srv))
 	http.Handle("/", playground.Handler("GraphQL playground", "/graphql"))
 
 	corsHandler := cors.New(cors.Options{

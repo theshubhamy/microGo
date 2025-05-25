@@ -34,14 +34,11 @@ func (server *grpcServer) PostAccount(ctx context.Context, r *pb.PostAccountRequ
 	if err != nil {
 		return nil, err
 	}
-
 	return &pb.PostAccountResponse{
-		Account: &pb.Account{
-			Id:    account.ID,
-			Name:  account.Name,
-			Email: account.Email,
-			Phone: account.Phone,
-		},
+		Id:    account.ID,
+		Name:  account.Name,
+		Email: account.Email,
+		Phone: account.Phone,
 	}, nil
 }
 
@@ -51,14 +48,12 @@ func (server *grpcServer) LoginAccount(ctx context.Context, r *pb.LoginRequest) 
 		return nil, err
 	}
 	return &pb.LoginResponse{
-		Account: &pb.Account{
-			Id:           account.ID,
-			Name:         account.Name,
-			Email:        account.Email,
-			Phone:        account.Phone,
-			AccessToken:  accessToken,
-			RefreshToken: refreshToken,
-		},
+		Id:           account.ID,
+		Name:         account.Name,
+		Email:        account.Email,
+		Phone:        account.Phone,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 	}, nil
 }
 

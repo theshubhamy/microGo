@@ -7,7 +7,24 @@ import (
 )
 
 type AccountInput struct {
-	Name string `json:"name"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Phone    string `json:"phone"`
+	Password string `json:"password"`
+}
+
+type LoginInput struct {
+	Emailorphone string `json:"emailorphone"`
+	Password     string `json:"password"`
+}
+
+type LoginResponse struct {
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	Email        string `json:"email"`
+	Phone        string `json:"phone"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 type Mutation struct {

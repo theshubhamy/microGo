@@ -19,15 +19,46 @@ func (r *mutationResolver) CreateAccount(ctx context.Context, in AccountInput) (
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	a, err := r.server.accountClient.PostAccount(ctx, in.Name)
+	a, err := r.server.accountClient.PostAccount(ctx, in.Name, in.Email, in.Phone, in.Password)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
 
 	return &Account{
-		ID:   a.ID,
-		Name: a.Name,
+		ID:       a.ID,
+		Name:     a.Name,
+		Email:    a.Email,
+		Phone:    a.Phone,
+		Password: a.Password,
+	}, nil
+}
+
+func (r *mutationResolver) LoginAccount(ctx context.Context, in LoginInput) (*LoginResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+	ip, ok := ctx.Value(ctxKeyIP).(string)
+	if !ok {
+		return nil, errors.New("missing IP from context")
+	}
+	userAgent, ok := ctx.Value(ctxKeyUserAgent).(string)
+	if !ok {
+		return nil, errors.New("missing user agent from context")
+	}
+
+	acc, accessToken, refreshToken, err := r.server.accountClient.LoginAccount(ctx, in.Emailorphone, in.Password, ip, userAgent)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return &LoginResponse{
+		ID:           acc.ID,
+		Name:         acc.Name,
+		Email:        acc.Email,
+		Phone:        acc.Phone,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 	}, nil
 }
 

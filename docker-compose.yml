@@ -6,8 +6,12 @@ services:
       dockerfile: ./services/account/app.dockerfile
     depends_on:
       - account_db
+      - redis
     environment:
       DATABASE_URL: postgres://microDbAdmin:microDbPSWD@account_db/microDb?sslmode=disable
+      JWT_SECRET: super-secret-access
+      REFRESH_JWT_SECRET: super-secret-refresh
+      REDIS_URL: redis://default:redispassword@redis:6379/0
     restart: on-failure
 
   # Catalog service
@@ -71,6 +75,14 @@ services:
       xpack.security.enabled: 'false' # disable security for local dev
     ports:
       - '9200:9200'
+    restart: unless-stopped
+
+    # ⚡ Redis Cache
+  redis:
+    image: redis:7
+    command: redis-server --requirepass redispassword
+    ports:
+      - '6379:6379'
     restart: unless-stopped
 
   # Order DB (PostgreSQL)

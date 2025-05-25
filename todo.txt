@@ -1,1 +1,0 @@
-1. accounts/server.go and client.go:- setup porper login and create account

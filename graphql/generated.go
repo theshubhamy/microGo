@@ -39,7 +39,6 @@ type Config struct {
 }
 
 type ResolverRoot interface {
-	Account() AccountResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
 }
@@ -49,12 +48,11 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Account struct {
-		Email    func(childComplexity int) int
-		ID       func(childComplexity int) int
-		Name     func(childComplexity int) int
-		Orders   func(childComplexity int) int
-		Password func(childComplexity int) int
-		Phone    func(childComplexity int) int
+		Email  func(childComplexity int) int
+		ID     func(childComplexity int) int
+		Name   func(childComplexity int) int
+		Orders func(childComplexity int) int
+		Phone  func(childComplexity int) int
 	}
 
 	LoginResponse struct {
@@ -96,14 +94,10 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Accounts func(childComplexity int, pagination *PaginationInput, id *string) int
 		Products func(childComplexity int, pagination *PaginationInput, query *string, id *string) int
 	}
 }
 
-type AccountResolver interface {
-	Orders(ctx context.Context, obj *Account) ([]*Order, error)
-}
 type MutationResolver interface {
 	CreateAccount(ctx context.Context, account AccountInput) (*Account, error)
 	LoginAccount(ctx context.Context, account LoginInput) (*LoginResponse, error)
@@ -111,7 +105,6 @@ type MutationResolver interface {
 	CreateOrder(ctx context.Context, order OrderInput) (*Order, error)
 }
 type QueryResolver interface {
-	Accounts(ctx context.Context, pagination *PaginationInput, id *string) ([]*Account, error)
 	Products(ctx context.Context, pagination *PaginationInput, query *string, id *string) ([]*Product, error)
 }
 
@@ -161,13 +154,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Account.Orders(childComplexity), true
-
-	case "Account.password":
-		if e.complexity.Account.Password == nil {
-			break
-		}
-
-		return e.complexity.Account.Password(childComplexity), true
 
 	case "Account.phone":
 		if e.complexity.Account.Phone == nil {
@@ -254,12 +240,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Mutation.CreateProduct(childComplexity, args["product"].(ProductInput)), true
 
-	case "Mutation.LoginAccount":
+	case "Mutation.loginAccount":
 		if e.complexity.Mutation.LoginAccount == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_LoginAccount_args(ctx, rawArgs)
+		args, err := ec.field_Mutation_loginAccount_args(ctx, rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -356,18 +342,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Product.Price(childComplexity), true
-
-	case "Query.accounts":
-		if e.complexity.Query.Accounts == nil {
-			break
-		}
-
-		args, err := ec.field_Query_accounts_args(ctx, rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.Accounts(childComplexity, args["pagination"].(*PaginationInput), args["id"].(*string)), true
 
 	case "Query.products":
 		if e.complexity.Query.Products == nil {
@@ -511,34 +485,6 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_Mutation_LoginAccount_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_LoginAccount_argsAccount(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["account"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_LoginAccount_argsAccount(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (LoginInput, error) {
-	if _, ok := rawArgs["account"]; !ok {
-		var zeroVal LoginInput
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("account"))
-	if tmp, ok := rawArgs["account"]; ok {
-		return ec.unmarshalNLoginInput2githubᚗcomᚋtheshubhamyᚋmicroGoᚋgraphqlᚐLoginInput(ctx, tmp)
-	}
-
-	var zeroVal LoginInput
-	return zeroVal, nil
-}
-
 func (ec *executionContext) field_Mutation_createAccount_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -623,6 +569,34 @@ func (ec *executionContext) field_Mutation_createProduct_argsProduct(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Mutation_loginAccount_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_loginAccount_argsAccount(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["account"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_loginAccount_argsAccount(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (LoginInput, error) {
+	if _, ok := rawArgs["account"]; !ok {
+		var zeroVal LoginInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("account"))
+	if tmp, ok := rawArgs["account"]; ok {
+		return ec.unmarshalNLoginInput2githubᚗcomᚋtheshubhamyᚋmicroGoᚋgraphqlᚐLoginInput(ctx, tmp)
+	}
+
+	var zeroVal LoginInput
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -648,57 +622,6 @@ func (ec *executionContext) field_Query___type_argsName(
 	}
 
 	var zeroVal string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Query_accounts_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Query_accounts_argsPagination(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["pagination"] = arg0
-	arg1, err := ec.field_Query_accounts_argsID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["id"] = arg1
-	return args, nil
-}
-func (ec *executionContext) field_Query_accounts_argsPagination(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*PaginationInput, error) {
-	if _, ok := rawArgs["pagination"]; !ok {
-		var zeroVal *PaginationInput
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
-	if tmp, ok := rawArgs["pagination"]; ok {
-		return ec.unmarshalOPaginationInput2ᚖgithubᚗcomᚋtheshubhamyᚋmicroGoᚋgraphqlᚐPaginationInput(ctx, tmp)
-	}
-
-	var zeroVal *PaginationInput
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Query_accounts_argsID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*string, error) {
-	if _, ok := rawArgs["id"]; !ok {
-		var zeroVal *string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalOString2ᚖstring(ctx, tmp)
-	}
-
-	var zeroVal *string
 	return zeroVal, nil
 }
 
@@ -1072,50 +995,6 @@ func (ec *executionContext) fieldContext_Account_phone(_ context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _Account_password(ctx context.Context, field graphql.CollectedField, obj *Account) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Account_password(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Password, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Account_password(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Account",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Account_orders(ctx context.Context, field graphql.CollectedField, obj *Account) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Account_orders(ctx, field)
 	if err != nil {
@@ -1130,7 +1009,7 @@ func (ec *executionContext) _Account_orders(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Account().Orders(rctx, obj)
+		return obj.Orders, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1151,8 +1030,8 @@ func (ec *executionContext) fieldContext_Account_orders(_ context.Context, field
 	fc = &graphql.FieldContext{
 		Object:     "Account",
 		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -1478,8 +1357,6 @@ func (ec *executionContext) fieldContext_Mutation_createAccount(ctx context.Cont
 				return ec.fieldContext_Account_email(ctx, field)
 			case "phone":
 				return ec.fieldContext_Account_phone(ctx, field)
-			case "password":
-				return ec.fieldContext_Account_password(ctx, field)
 			case "orders":
 				return ec.fieldContext_Account_orders(ctx, field)
 			}
@@ -1500,8 +1377,8 @@ func (ec *executionContext) fieldContext_Mutation_createAccount(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_LoginAccount(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_LoginAccount(ctx, field)
+func (ec *executionContext) _Mutation_loginAccount(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_loginAccount(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1528,7 +1405,7 @@ func (ec *executionContext) _Mutation_LoginAccount(ctx context.Context, field gr
 	return ec.marshalOLoginResponse2ᚖgithubᚗcomᚋtheshubhamyᚋmicroGoᚋgraphqlᚐLoginResponse(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_LoginAccount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_loginAccount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1559,7 +1436,7 @@ func (ec *executionContext) fieldContext_Mutation_LoginAccount(ctx context.Conte
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_LoginAccount_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_loginAccount_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -2270,75 +2147,6 @@ func (ec *executionContext) fieldContext_Product_price(_ context.Context, field 
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Float does not have child fields")
 		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_accounts(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_accounts(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Accounts(rctx, fc.Args["pagination"].(*PaginationInput), fc.Args["id"].(*string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*Account)
-	fc.Result = res
-	return ec.marshalNAccount2ᚕᚖgithubᚗcomᚋtheshubhamyᚋmicroGoᚋgraphqlᚐAccountᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_accounts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Account_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Account_name(ctx, field)
-			case "email":
-				return ec.fieldContext_Account_email(ctx, field)
-			case "phone":
-				return ec.fieldContext_Account_phone(ctx, field)
-			case "password":
-				return ec.fieldContext_Account_password(ctx, field)
-			case "orders":
-				return ec.fieldContext_Account_orders(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Account", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_accounts_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
 	}
 	return fc, nil
 }
@@ -4737,64 +4545,28 @@ func (ec *executionContext) _Account(ctx context.Context, sel ast.SelectionSet, 
 		case "id":
 			out.Values[i] = ec._Account_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
+				out.Invalids++
 			}
 		case "name":
 			out.Values[i] = ec._Account_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
+				out.Invalids++
 			}
 		case "email":
 			out.Values[i] = ec._Account_email(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
+				out.Invalids++
 			}
 		case "phone":
 			out.Values[i] = ec._Account_phone(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "password":
-			out.Values[i] = ec._Account_password(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
+				out.Invalids++
 			}
 		case "orders":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Account_orders(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
+			out.Values[i] = ec._Account_orders(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
 			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4905,9 +4677,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createAccount(ctx, field)
 			})
-		case "LoginAccount":
+		case "loginAccount":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_LoginAccount(ctx, field)
+				return ec._Mutation_loginAccount(ctx, field)
 			})
 		case "createProduct":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -5126,28 +4898,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "accounts":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_accounts(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "products":
 			field := field
 
@@ -5535,60 +5285,6 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
-
-func (ec *executionContext) marshalNAccount2ᚕᚖgithubᚗcomᚋtheshubhamyᚋmicroGoᚋgraphqlᚐAccountᚄ(ctx context.Context, sel ast.SelectionSet, v []*Account) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNAccount2ᚖgithubᚗcomᚋtheshubhamyᚋmicroGoᚋgraphqlᚐAccount(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNAccount2ᚖgithubᚗcomᚋtheshubhamyᚋmicroGoᚋgraphqlᚐAccount(ctx context.Context, sel ast.SelectionSet, v *Account) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._Account(ctx, sel, v)
-}
 
 func (ec *executionContext) unmarshalNAccountInput2githubᚗcomᚋtheshubhamyᚋmicroGoᚋgraphqlᚐAccountInput(ctx context.Context, v any) (AccountInput, error) {
 	res, err := ec.unmarshalInputAccountInput(ctx, v)

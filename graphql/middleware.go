@@ -2,7 +2,13 @@ package graphql
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"strings"
+
+	"github.com/go-redis/redis/v8"
+	"github.com/theshubhamy/microGo/services/account"
 )
 
 type contextKey string
@@ -10,9 +16,9 @@ type contextKey string
 const (
 	ctxKeyIP        contextKey = "ip"
 	ctxKeyUserAgent contextKey = "user-agent"
+	UserIDKey       contextKey = "userID"
 )
 
-// ✅ Middleware to inject IP and User-Agent into context
 func InjectRequestMeta(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ip := r.Header.Get("X-Forwarded-For")
@@ -26,4 +32,55 @@ func InjectRequestMeta(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func AuthMiddleware(redisClient *redis.Client) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			opName := extractOperationName(r)
+			if opName == "loginAccount" || opName == "createAccount" {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			authHeader := r.Header.Get("Authorization")
+			token := extractBearerToken(authHeader)
+			if token == "" {
+				http.Error(w, "Missing token", http.StatusUnauthorized)
+				return
+			}
+
+			claims, err := account.VerifyJWT(token)
+			if err != nil {
+				http.Error(w, "Invalid token", http.StatusUnauthorized)
+				return
+			}
+
+			sessionKey := fmt.Sprintf("user-sessions:%s", claims.UserID)
+			exists, err := redisClient.Exists(r.Context(), sessionKey).Result()
+			if err != nil || exists == 0 {
+				http.Error(w, "Session not found", http.StatusUnauthorized)
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+func extractBearerToken(header string) string {
+	if strings.HasPrefix(header, "Bearer ") {
+		return strings.TrimPrefix(header, "Bearer ")
+	}
+	return ""
+}
+
+func extractOperationName(r *http.Request) string {
+	type gqlReq struct {
+		OperationName string `json:"operationName"`
+	}
+	var body gqlReq
+	_ = json.NewDecoder(r.Body).Decode(&body)
+	return body.OperationName
 }

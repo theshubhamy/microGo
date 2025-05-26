@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/go-redis/redis/v8"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/cors"
 	"github.com/theshubhamy/microGo/graphql"
@@ -16,6 +18,7 @@ type config struct {
 	AccountURL string `envconfig:"ACCOUNT_SERVICE_URL"`
 	CatalogURL string `envconfig:"CATALOG_SERVICE_URL"`
 	OrderURL   string `envconfig:"ORDER_SERVICE_URL"`
+	RedisURL   string `envconfig:"REDIS_URL"`
 }
 
 func main() {
@@ -23,7 +26,14 @@ func main() {
 	if err := envconfig.Process("", &cfg); err != nil {
 		log.Fatal(err)
 	}
-
+	opt, err := redis.ParseURL(cfg.RedisURL)
+	if err != nil {
+		log.Fatalf("Failed to parse Redis URL: %v", err)
+	}
+	redisClient := redis.NewClient(opt)
+	if err := redisClient.Ping(context.Background()).Err(); err != nil {
+		log.Fatalf("Could not connect to Redis: %v", err)
+	}
 	// Your custom server that provides resolvers
 	customServer, err := graphql.NewGraphQLServer(cfg.AccountURL, cfg.CatalogURL, cfg.OrderURL)
 	if err != nil {
@@ -38,7 +48,10 @@ func main() {
 	srv.AddTransport(transport.GET{})
 	srv.AddTransport(transport.POST{})
 
-	http.Handle("/graphql", graphql.InjectRequestMeta(srv))
+	// Wrap with Auth middleware
+
+	http.Handle("/graphql", graphql.AuthMiddleware(redisClient)(graphql.InjectRequestMeta(srv)))
+
 	http.Handle("/", playground.Handler("GraphQL playground", "/graphql"))
 
 	corsHandler := cors.New(cors.Options{

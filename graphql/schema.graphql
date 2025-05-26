@@ -5,7 +5,6 @@ type Account {
   name: String!
   email: String!
   phone: String!
-  password: String!
   orders: [Order!]!
 }
 
@@ -75,12 +74,11 @@ input OrderInput {
 
 type Mutation {
   createAccount(account: AccountInput!): Account
-  LoginAccount(account: LoginInput!): LoginResponse
+  loginAccount(account: LoginInput!): LoginResponse
   createProduct(product: ProductInput!): Product
   createOrder(order: OrderInput!): Order
 }
 
 type Query {
-  accounts(pagination: PaginationInput, id: String): [Account!]!
   products(pagination: PaginationInput, query: String, id: String): [Product!]!
 }

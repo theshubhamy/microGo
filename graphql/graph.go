@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/theshubhamy/microGo/services/account"
 	"github.com/theshubhamy/microGo/services/catalog"
 	"github.com/theshubhamy/microGo/services/order"
@@ -14,10 +13,6 @@ type Server struct {
 	accountClient *account.Client
 	catalogClient *catalog.Client
 	orderClient   *order.Client
-}
-
-func (s *Server) AddTransport(t transport.GET) {
-	panic("unimplemented")
 }
 
 func NewGraphQLServer(accountUrl, catalogURL, orderURL string) (*Server, error) {
@@ -58,12 +53,6 @@ func (s *Server) Mutation() MutationResolver {
 
 func (s *Server) Query() QueryResolver {
 	return &queryResolver{
-		server: s,
-	}
-}
-
-func (s *Server) Account() AccountResolver {
-	return &accountResolver{
 		server: s,
 	}
 }

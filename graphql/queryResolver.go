@@ -2,52 +2,13 @@ package graphql
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 )
 
 type queryResolver struct {
 	server *Server
-}
-
-func (r *queryResolver) Accounts(ctx context.Context, pagination *PaginationInput, id *string) ([]*Account, error) {
-	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	defer cancel()
-
-	// Get single
-	if id != nil {
-		r, err := r.server.accountClient.GetAccount(ctx, *id)
-		if err != nil {
-			log.Println(err)
-			return nil, err
-		}
-		return []*Account{{
-			ID:   r.ID,
-			Name: r.Name,
-		}}, nil
-	}
-
-	skip, take := uint64(0), uint64(0)
-	if pagination != nil {
-		skip, take = pagination.bounds()
-	}
-
-	accountList, err := r.server.accountClient.GetAccounts(ctx, skip, take)
-	if err != nil {
-		log.Println(err)
-		return nil, err
-	}
-
-	var accounts []*Account
-	for _, a := range *accountList {
-		account := &Account{
-			ID:   a.ID,
-			Name: a.Name,
-		}
-		accounts = append(accounts, account)
-	}
-
-	return accounts, nil
 }
 
 func (r *queryResolver) Products(ctx context.Context, pagination *PaginationInput, query *string, id *string) ([]*Product, error) {
@@ -97,6 +58,42 @@ func (r *queryResolver) Products(ctx context.Context, pagination *PaginationInpu
 	}
 
 	return products, nil
+}
+
+func (r *queryResolver) Orders(ctx context.Context) ([]*Order, error) {
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+	userID, ok := ctx.Value(UserIDKey).(string)
+	if !ok || userID == "" {
+		return nil, errors.New("unauthorized: user ID not found")
+	}
+	orderList, err := r.server.orderClient.GetOrdersForAccount(ctx, userID)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	var orders []*Order
+	for _, o := range orderList {
+		var products []*OrderedProduct
+		for _, p := range o.Products {
+			products = append(products, &OrderedProduct{
+				ID:          p.ID,
+				Name:        p.Name,
+				Description: p.Description,
+				Price:       p.Price,
+				Quantity:    int(p.Quantity),
+			})
+		}
+		orders = append(orders, &Order{
+			ID:         o.ID,
+			CreatedAt:  o.CreatedAt,
+			TotalPrice: o.TotalPrice,
+			Products:   products,
+		})
+	}
+
+	return orders, nil
 }
 
 func (p PaginationInput) bounds() (uint64, uint64) {

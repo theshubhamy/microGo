@@ -119,16 +119,16 @@ func (r *postgresRepository) GetOrderforAccount(ctx context.Context, accountId s
 		})
 		*lastOrder = *order
 	}
-	if lastOrder != nil {
-		newOrder := Order{
-			ID:         lastOrder.ID,
-			AccountId:  lastOrder.AccountId,
-			CreatedAt:  lastOrder.CreatedAt,
-			TotalPrice: lastOrder.TotalPrice,
-			Products:   lastOrder.Products,
-		}
-		orders = append(orders, newOrder)
+
+	newOrder := Order{
+		ID:         lastOrder.ID,
+		AccountId:  lastOrder.AccountId,
+		CreatedAt:  lastOrder.CreatedAt,
+		TotalPrice: lastOrder.TotalPrice,
+		Products:   lastOrder.Products,
 	}
+	orders = append(orders, newOrder)
+
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}

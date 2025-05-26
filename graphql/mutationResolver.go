@@ -26,11 +26,10 @@ func (r *mutationResolver) CreateAccount(ctx context.Context, in AccountInput) (
 	}
 
 	return &Account{
-		ID:       a.ID,
-		Name:     a.Name,
-		Email:    a.Email,
-		Phone:    a.Phone,
-		Password: a.Password,
+		ID:    a.ID,
+		Name:  a.Name,
+		Email: a.Email,
+		Phone: a.Phone,
 	}, nil
 }
 
@@ -94,7 +93,11 @@ func (r *mutationResolver) CreateOrder(ctx context.Context, in OrderInput) (*Ord
 			Quantity: uint32(p.Quantity),
 		})
 	}
-	o, err := r.server.orderClient.PostOrder(ctx, in.AccountID, products)
+	userID, ok := ctx.Value(UserIDKey).(string)
+	if !ok || userID == "" {
+		return nil, errors.New("unauthorized: user ID not found")
+	}
+	o, err := r.server.orderClient.PostOrder(ctx, userID, products)
 	if err != nil {
 		log.Println(err)
 		return nil, err

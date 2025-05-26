@@ -12,6 +12,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/cors"
 	"github.com/theshubhamy/microGo/graphql"
+	"github.com/theshubhamy/microGo/services/account"
 )
 
 type config struct {
@@ -30,6 +31,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to parse Redis URL: %v", err)
 	}
+	account.LoadConfig()
 	redisClient := redis.NewClient(opt)
 	if err := redisClient.Ping(context.Background()).Err(); err != nil {
 		log.Fatalf("Could not connect to Redis: %v", err)

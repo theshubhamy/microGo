@@ -53,6 +53,8 @@ services:
       ACCOUNT_SERVICE_URL: account:8080
       CATALOG_SERVICE_URL: catalog:8080
       ORDER_SERVICE_URL: order:8080
+      JWT_SECRET: super-secret-access
+      REFRESH_JWT_SECRET: super-secret-refresh
       REDIS_URL: redis://default:redispassword@redis:6379/0
     restart: on-failure
 

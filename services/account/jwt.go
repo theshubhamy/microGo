@@ -1,6 +1,7 @@
 package account
 
 import (
+	"log"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -21,14 +22,13 @@ func GenerateJWT(userID string) (string, string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	jwtSecret := AppConfig.JWT_SECRET
-	refreshjwtSecret := AppConfig.REFRESH_JWT_SECRET
+
 	// Sign the token with the secret
-	accessToken, err := token.SignedString([]byte(jwtSecret))
+	accessToken, err := token.SignedString([]byte(AppConfig.JWT_SECRET))
 	if err != nil {
 		return "", "", err
 	}
-	refreshToken, err := token.SignedString([]byte(refreshjwtSecret))
+	refreshToken, err := token.SignedString([]byte(AppConfig.REFRESH_JWT_SECRET))
 	if err != nil {
 		return "", "", err
 	}
@@ -36,12 +36,11 @@ func GenerateJWT(userID string) (string, string, error) {
 }
 
 func VerifyJWT(tokenString string) (*CustomClaims, error) {
-	jwtSecret := AppConfig.JWT_SECRET
 	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (any, error) {
-		return jwtSecret, nil
+		return []byte(AppConfig.JWT_SECRET), nil
 	})
-
 	if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
+		log.Println(claims)
 		return claims, nil
 	} else {
 		return nil, err
